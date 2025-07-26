@@ -12,6 +12,7 @@ void get_URL( const string& host, const string& path )
   // cerr << "Function called: get_URL(" << host << ", " << path << ")\n";
   // cerr << "Warning: get_URL() has not been implemented yet.\n";
 
+  
   //根据域名host和服务名http创建addr对象
   Address addr(host,"http");
 

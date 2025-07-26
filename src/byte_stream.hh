@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <string>
 #include <string_view>
+#include <deque>
 
 class Reader;
 class Writer;
@@ -23,11 +24,16 @@ public:
 
 protected:
   // Please add any additional state to the ByteStream here, and not to the Writer and Reader interfaces.
-  uint64_t capacity_;
+  uint64_t capacity_;//最大容量字节数
+  uint64_t bytes_pushed_{};//已经推送的字节数
+  uint64_t bytes_popped_{};//已经移除的字节数
   bool error_ {};
+  bool is_closed_{};//标识输入是否结束
+
+  std::deque<char> byte_stream_{};//存储字节的双端队列
 };
 
-class Writer : public ByteStream
+class Writer : public ByteStream//push
 {
 public:
   void push( std::string data ); // Push data to stream, but only as much as available capacity allows.
@@ -38,7 +44,7 @@ public:
   uint64_t bytes_pushed() const;       // Total number of bytes cumulatively pushed to the stream
 };
 
-class Reader : public ByteStream
+class Reader : public ByteStream//pop
 {
 public:
   std::string_view peek() const; // Peek at the next bytes in the buffer
