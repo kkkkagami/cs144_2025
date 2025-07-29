@@ -1,6 +1,7 @@
 #pragma once
 
 #include "byte_stream.hh"
+#include<map>
 
 class Reassembler
 {
@@ -42,5 +43,8 @@ public:
   const Writer& writer() const { return output_.writer(); }
 
 private:
-  ByteStream output_;
+  ByteStream output_;//组合出的原始有序字节流
+
+  std::map<uint64_t,std::string> stroed_segments_{};//使用map存储索引index和对应的data
+  uint64_t next_expected_index_{};//output_接下来应该接收到的索引
 };
