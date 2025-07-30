@@ -9,6 +9,13 @@ void Reassembler::insert( uint64_t first_index, string data, bool is_last_substr
   
   Writer& writeable_output=output_.writer();//将output_转换成可写的Writer&类型
 
+  //step0.确认is_last_substring的情况
+  uint64_t final_byte_index{};//insert函数所需要的最后一位输入
+  if(is_last_substring){
+    //如果获取了最后一部分输入的字节
+    final_byte_index=first_index+data.size()-1;
+  }
+
   //step1.检查map中是否有可以送入output_的数据
   //搜索map中索引index小于next_expected_index_的最大值
   for(auto it=stroed_segments_.begin();it!=stroed_segments_.end();++it){
@@ -18,6 +25,11 @@ void Reassembler::insert( uint64_t first_index, string data, bool is_last_substr
       std::string map_data=it->second.substr(next_expected_index_-it->first);//截断前面的多余部分
       writeable_output.push(map_data);//写入完成
       next_expected_index_=map_data_end_index+1;//更新next_expected_index_
+
+      //检查是否结束输入
+      if(next_expected_index_>=final_byte_index){
+        writeable_output.close();
+      }
     }
   }
 
@@ -52,6 +64,11 @@ void Reassembler::insert( uint64_t first_index, string data, bool is_last_substr
   //3.1 如果相等，那么进行下面的操作：直接将data送入output_(用writeable_output的形式)
   if(first_index==next_expected_index_){
     writeable_output.push(data);
+
+    if(next_expected_index_>=final_byte_index){
+      writeable_output.close();
+    }
+
     return;//至此结束这种情况的操作，函数返回
   }
 
@@ -60,7 +77,7 @@ void Reassembler::insert( uint64_t first_index, string data, bool is_last_substr
   stroed_segments_[first_index]=data;
 
   //step4.检查是否是最后一位传入的数据，是则关闭输入
-  if(is_last_substring)  writeable_output.close();
+  //if(is_last_substring)  writeable_output.close();
 }
 
 // How many bytes are stored in the Reassembler itself?
