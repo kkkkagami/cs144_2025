@@ -12,7 +12,7 @@ void Reassembler::insert( uint64_t first_index, string data, bool is_last_substr
   //step0.确认is_last_substring的情况
   if(is_last_substring){
     //如果获取了最后一部分输入的字节,更新final_byte_index_确认末位索引
-    final_byte_index_=first_index+data.size()-1;
+    final_byte_index_=first_index+data.size();
     have_last_substring_received_=true;
   }
 
@@ -65,7 +65,7 @@ void Reassembler::insert( uint64_t first_index, string data, bool is_last_substr
     stroed_segments_.erase(it);
 
     //1.4 检查是否要关闭输入
-    if(next_expected_index_>=final_byte_index_&&have_last_substring_received_==true){
+    if(next_expected_index_==final_byte_index_&&have_last_substring_received_==true){
       writeable_output.close();
     }
   }
@@ -76,8 +76,8 @@ void Reassembler::insert( uint64_t first_index, string data, bool is_last_substr
 
   //2.1 last_index超出了'最大可接受索引' -->直接截断多余部分
   //最大可接受索引[这个索引位置是最大的未output_范围的索引]
-  uint64_t max_acceptable_index=writeable_output.bytes_pushed()+writeable_output.available_capacity()-1;
-  if(last_index>=max_acceptable_index) { 
+  uint64_t max_acceptable_index=writeable_output.bytes_pushed()+writeable_output.available_capacity();
+  if(last_index>max_acceptable_index) { 
     if(first_index>max_acceptable_index){
       //data首位已经超出可接受范围，直接返回
       return;
@@ -103,7 +103,7 @@ void Reassembler::insert( uint64_t first_index, string data, bool is_last_substr
   if(first_index==next_expected_index_){
     writeable_output.push(data);
 
-    if(next_expected_index_>=final_byte_index_&&have_last_substring_received_==true){
+    if(next_expected_index_==final_byte_index_&&have_last_substring_received_==true){
       writeable_output.close();
     }
   }
