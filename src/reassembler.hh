@@ -47,4 +47,8 @@ private:
 
   std::map<uint64_t,std::string> stroed_segments_{};//使用map存储索引index和对应的data
   uint64_t next_expected_index_{};//output_接下来应该接收到的索引
+  uint64_t final_byte_index_{};//insert函数所需要的最后一位输入
+  bool have_last_substring_received_=false;//确认是否收到'is_last_substring'信号
 };
+
+//close()的时机？接收到结束信号&&所有字节都已经送入output_

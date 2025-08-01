@@ -10,30 +10,52 @@ void Reassembler::insert( uint64_t first_index, string data, bool is_last_substr
   Writer& writeable_output=output_.writer();//将output_转换成可写的Writer&类型
 
   //step0.确认is_last_substring的情况
-  uint64_t final_byte_index{};//insert函数所需要的最后一位输入
   if(is_last_substring){
-    //如果获取了最后一部分输入的字节
-    final_byte_index=first_index+data.size()-1;
+    //如果获取了最后一部分输入的字节,更新final_byte_index_确认末位索引
+    final_byte_index_=first_index+data.size()-1;
+    have_last_substring_received_=true;
   }
 
-  //step1.检查map中是否有可以送入output_的数据
-  //搜索map中索引index小于next_expected_index_的最大值
-  for(auto it=stroed_segments_.begin();it!=stroed_segments_.end();++it){
-    uint64_t map_data_end_index=it->first+it->second.size()-1;//当前map数据末位元素索引
-    if(map_data_end_index>=next_expected_index_&&it->first<=next_expected_index_){
-      //当前数据可以送入output_
-      std::string map_data=it->second.substr(next_expected_index_-it->first);//截断前面的多余部分
-      writeable_output.push(map_data);//写入完成
-      next_expected_index_=map_data_end_index+1;//更新next_expected_index_
 
-      //检查是否结束输入
-      if(next_expected_index_>=final_byte_index){
-        writeable_output.close();
-      }
+  //step1.检查map中是否有可以送入output_的数据----------------------------------------------------------
+  while(true){
+    //1.1 检查map中是否存在恰好的片段
+    auto it=stroed_segments_.find(next_expected_index_);
+    if(it==stroed_segments_.end()){
+      //如果it指向end表示没有找到对应的片段，结束在map中的查找
+      break;
+    }
+
+    //1.2 到达这一步说明map中存在恰好的片段，由it指向
+    std::string segment_it_data=it->second;//it指向数据的副本
+    uint64_t segment_it_data_len=segment_it_data.size();//当前数据的大小
+    uint64_t avaliable_cap=writeable_output.available_capacity();//当前可容纳数据量
+
+    //1.2.1 对map中it指向的片段做裁剪
+    if(segment_it_data_len>writeable_output.available_capacity()){
+      //超出output_容纳的范围，裁剪副本
+      segment_it_data=segment_it_data.substr(0,avaliable_cap);
+
+      //数据推入
+      writeable_output.push(segment_it_data);
+      next_expected_index_+=segment_it_data.size();
+      break;
+    }
+
+    //1.2.2  不需要裁剪
+    writeable_output.push(segment_it_data);
+    next_expected_index_+=segment_it_data.size();
+
+    //1.3 删除map中已经送入的片段
+    stroed_segments_.erase(it);
+
+    //1.4 检查是否要关闭输入
+    if(next_expected_index_>=final_byte_index_&&have_last_substring_received_==true){
+      writeable_output.close();
     }
   }
 
-  //step2.根据当前收到的data的首位索引first_index和长度len_data确定当前收到数据的索引范围
+  //step2.根据当前收到的data的首位索引first_index和长度len_data确定当前收到数据的索引范围-----------------
   //并根据范围情况预处理data
   uint64_t last_index=first_index+data.size()-1;//当前收到的data的最后一位的索引
 
@@ -60,12 +82,12 @@ void Reassembler::insert( uint64_t first_index, string data, bool is_last_substr
   }
 
   
-  //step3.first_index与next_expected_index_是什么样的关系？
+  //step3.first_index与next_expected_index_是什么样的关系？----------------------------------------------
   //3.1 如果相等，那么进行下面的操作：直接将data送入output_(用writeable_output的形式)
   if(first_index==next_expected_index_){
     writeable_output.push(data);
 
-    if(next_expected_index_>=final_byte_index){
+    if(next_expected_index_>=final_byte_index_&&have_last_substring_received_==true){
       writeable_output.close();
     }
 
