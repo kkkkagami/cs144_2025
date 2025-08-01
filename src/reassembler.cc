@@ -16,6 +16,11 @@ void Reassembler::insert( uint64_t first_index, string data, bool is_last_substr
     have_last_substring_received_=true;
   }
 
+  if (have_last_substring_received_ && data.empty() && first_index == next_expected_index_) {
+    writeable_output.close();
+    return;
+  }
+
 
   //step1.检查map中是否有可以送入output_的数据----------------------------------------------------------
   while(true){
@@ -39,6 +44,16 @@ void Reassembler::insert( uint64_t first_index, string data, bool is_last_substr
       //数据推入
       writeable_output.push(segment_it_data);
       next_expected_index_+=segment_it_data.size();
+
+      //这里需要更新map中it对应的条目
+      //erase一个旧的条目，在insert一个新的
+      uint64_t segment_insert_first_index=next_expected_index_;//insert段的起始索引
+      std::string segment_insert_data=it->second.substr(segment_it_data.size());
+
+      stroed_segments_.erase(it);
+
+      stroed_segments_[segment_insert_first_index]=segment_insert_data;
+
       break;
     }
 
@@ -77,8 +92,9 @@ void Reassembler::insert( uint64_t first_index, string data, bool is_last_substr
       //data的末位也比next_expected_index_小，那么这段数据已经传送过，函数返回
       return; 
     }
+    uint64_t overlap_len=next_expected_index_-first_index;//截断长度
     first_index=next_expected_index_;
-    data=data.substr(next_expected_index_);//data自前方截断
+    data=data.substr(overlap_len);//data自前方截断
   }
 
   
@@ -90,8 +106,6 @@ void Reassembler::insert( uint64_t first_index, string data, bool is_last_substr
     if(next_expected_index_>=final_byte_index_&&have_last_substring_received_==true){
       writeable_output.close();
     }
-
-    return;//至此结束这种情况的操作，函数返回
   }
 
   //3.2 如果不相等，那只能是first_index>next_expected_index_ [小于的情况在step1已经清除]
