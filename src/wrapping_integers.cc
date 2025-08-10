@@ -25,7 +25,16 @@ uint64_t Wrap32::unwrap( Wrap32 zero_point, uint64_t checkpoint ) const
     base+diff+(1ULL<<32)
   };
 
-  int max_index = max_element(candidates,candidates+3) - candidates;
+  int best_index=0;
+  uint64_t best_dist=(candidates[0]>checkpoint)?candidates[0]-checkpoint:checkpoint-candidates[0];
+  for(int i=1;i<3;++i){
+    uint64_t dist=(candidates[i]>checkpoint)?candidates[i]-checkpoint:checkpoint-candidates[i];
 
-  return candidates[max_index];
+    if(dist<best_dist){
+      best_dist=dist;
+      best_index=i;
+    }
+  }
+
+  return candidates[best_index];
 }
