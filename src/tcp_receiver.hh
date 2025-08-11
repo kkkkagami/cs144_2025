@@ -27,4 +27,10 @@ public:
 
 private:
   Reassembler reassembler_;
+
+  //标志isn_是否被初始化过:
+  //只有isn_已经被初始化，才能在receive函数调用insert
+  bool isn_initialnized=false;
+
+  uint64_t isn_{};//初始序列号
 };
