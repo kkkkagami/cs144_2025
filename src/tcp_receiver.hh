@@ -32,5 +32,5 @@ private:
   //只有isn_已经被初始化，才能在receive函数调用insert
   bool isn_initialnized=false;
 
-  uint64_t isn_{};//初始序列号
+  Wrap32 isn_{0};//初始序列号
 };
