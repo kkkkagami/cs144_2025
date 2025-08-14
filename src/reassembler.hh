@@ -48,16 +48,18 @@ public:
   // 返回output_下一位希望接收到的索引
   uint64_t get_next_expected_index() const { return next_expected_index_; }
 
-  //返回output_的可用字节数
-  uint16_t ava_capacity() const { 
-    const uint16_t max16=0xFFFFu;
-    return (output_.writer().available_capacity()>max16)? (uint16_t)max16:output_.writer().available_capacity();
+  // 返回output_的可用字节数
+  uint16_t ava_capacity() const
+  {
+    const uint16_t max16 = 0xFFFFu;
+    return ( output_.writer().available_capacity() > max16 ) ? (uint16_t)max16
+                                                             : output_.writer().available_capacity();
   }
 
-  //关闭output_字节流
+  // 关闭output_字节流
   void close_output() { output_.writer().close(); }
 
-  //FIN的情况，next_expected_index向后一位
+  // FIN的情况，next_expected_index向后一位
   void add_1_next_expected_index() { ++next_expected_index_; }
 
 private:

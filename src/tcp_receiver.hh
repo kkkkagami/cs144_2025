@@ -28,9 +28,9 @@ public:
 private:
   Reassembler reassembler_;
 
-  //标志isn_是否被初始化过:
-  //只有isn_已经被初始化，才能在receive函数调用insert
-  bool isn_initialnized=false;
+  // 标志isn_是否被初始化过:
+  // 只有isn_已经被初始化，才能在receive函数调用insert
+  bool isn_initialnized = false;
 
-  Wrap32 isn_{0};//初始序列号
+  Wrap32 isn_ { 0 }; // 初始序列号
 };
